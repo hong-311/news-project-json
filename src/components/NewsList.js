@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
+import { SyncLoader } from "react-spinners";
 import NewsItem from './NewsItem';
 import styled from 'styled-components';
 import axios from 'axios';
 import usePromise from '../libs/usePromise';
 import Pagination from './PageNation';
-import newsApiData from '../newsApiData';
+
 
 //스타일 컴포넌트 생성
 const NewsListBlock = styled.div`
@@ -30,21 +31,34 @@ margin-top: 2rem;
 //카테고리별 데이터
 //https://newsapi.org/v2/top-headlines?country=kr&category=business&apiKey=발급키
 function NewsList({category}) {
-    const itemsPerPage = 10; // 한 페이지에 표시할 아이템 수
-    const [currentPage, setCurrentPage] = useState(1);
-
+  const apikey = process.env.REACT_APP_API_KEY;
+  const itemsPerPage = 10; // 한 페이지에 표시할 아이템 수
+  const [currentPage, setCurrentPage] = useState(1);
+    
     //데이터 받아오기 - 로딩, 성공, 실패
     const [loading, response, error] = usePromise(() => {
         //카테고리를 담는 변수
-        
+        const query = category === 'all' ? '' : `&category=${category}`;
 
-        return newsApiData;
+        return axios.get(
+            `https://newsapi.org/v2/top-headlines?country=kr${query}&apiKey=${apikey}`,
+        );
     },[category]);
 
     
     //로딩중
     if(loading){
-        return <NewsListBlock><img src="./img/loading.png" alt="페이지 로딩 중" /></NewsListBlock>;
+      return <NewsListBlock><SyncLoader
+      color="#1A73E8"
+      margin={2}
+      size={10}
+      style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)'
+        }}
+    /></NewsListBlock>;
     }
 
     //값이 없을 때
@@ -58,7 +72,7 @@ function NewsList({category}) {
     }
 
     //값이 유효할 때
-    const articles = category === 'all' ? response.articles : response.articles.filter(article => article.category===category);
+    const { articles } = response.data;
 
     const totalPages = Math.ceil(articles.length / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;
