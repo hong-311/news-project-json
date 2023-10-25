@@ -12,7 +12,7 @@ function NewsPage({searchResults}) {
 
     return (
         <div>
-            <NewsList category={categoryName} newsData={searchResults} />
+            <NewsList category={categoryName} />
         </div>
     );
 }
