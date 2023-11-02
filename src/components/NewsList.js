@@ -6,6 +6,7 @@ import usePromise from '../libs/usePromise';
 import Pagination from './PageNation';
 import newsApiData from '../newsApiData';
 import Error from './Error';
+import NotFound from './NotFound'; // NotFound 컴포넌트 import
 
 // 스타일 컴포넌트 생성
 const NewsListBlock = styled.div`
@@ -24,11 +25,12 @@ const NewsListBlock = styled.div`
 
   input {
     width: 660px; height: 40px;
-    margin-bottom: 20px;
-    border-radius: 25px;  border: 0px solid #ccc; 
+    margin: 0 0 20px -20px;
+    padding-left: 30px;
+    border-radius: 25px; border: 0px solid #ccc;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
     resize: none; outline: none;
-    font-size: 16px;  cursor: pointer;
+    font-size: 16px; cursor: pointer;
     line-height: 40px;  overflow: hidden;
     
 }
@@ -73,18 +75,15 @@ function NewsList({ category }) {
   // 값이 유효할 때
   const articles = category === 'all' ? response.articles : response.articles.filter(article => article.category === category);
 
-  // 검색어가 있을 때, 해당 검색어와 일치하는 기사들로 필터링
-  const handleSearch = () => {
-    const filteredArticles = articles.filter(article =>
-      article.title.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-    return filteredArticles;
-  };
+  const filteredArticles = articles.filter(article =>
+    article.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
-  const totalPages = Math.ceil(handleSearch().length / itemsPerPage);
+
+  const totalPages = Math.ceil(filteredArticles.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const currentItems = handleSearch().slice(startIndex, endIndex); 
+  const currentItems = filteredArticles.slice(startIndex, endIndex); 
 
   return (
     <NewsListBlock>
@@ -95,15 +94,21 @@ function NewsList({ category }) {
           onChange={(e) => setSearchQuery(e.target.value)}
         />
       </div>
-      {/* 현재 페이지에 해당하는 기사들 */}
-      {currentItems.map((article) => (
-        <NewsItem key={article.source.id} article={article} />
-      ))}
+       {/* 검색 결과가 없을 때 NotFound 컴포넌트 호출 */}
+        {currentItems.length === 0 && searchQuery.trim() !== '' ? (
+          <NotFound setSearchQuery={setSearchQuery} setCurrentPage={setCurrentPage}/>
+        ) : (
+          // 검색 결과 기사들을 보여줌
+        currentItems.map((article) => (
+          <NewsItem key={article.source.id} article={article} />
+        ))
+      )}
+    
       {/* 페이지네이션 컴포넌트 */}
       {totalPages > 1 && (
         <Pagination
           currentPage={currentPage}
-          totalItems={handleSearch().length}
+          totalItems={filteredArticles.length}
           itemsPerPage={itemsPerPage}
           onPageChange={setCurrentPage}
         />
